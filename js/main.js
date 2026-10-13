@@ -6,6 +6,35 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  const lenis = typeof Lenis !== 'undefined' ? new Lenis({
+    duration: 1.5,
+    smoothTouch: false
+  }) : null;
+
+  const animateScroll = (time) => {
+    lenis.raf(time);
+    window.requestAnimationFrame(animateScroll);
+  };
+
+  if (lenis) window.requestAnimationFrame(animateScroll);
+
+  document.addEventListener('click', (event) => {
+    if (!lenis || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const clickedElement = event.target instanceof Element ? event.target : null;
+    const link = clickedElement?.closest('a[href^="#"]');
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+
+    const targetId = decodeURIComponent(link.getAttribute('href').slice(1));
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    event.preventDefault();
+    history.pushState(null, '', `#${encodeURIComponent(targetId)}`);
+    const headerOffset = document.getElementById('siteHeader')?.offsetHeight ?? 0;
+    lenis.scrollTo(target, { duration: 1.5, offset: -headerOffset });
+  });
+
   /* =========================================================================
      1. CONTINUOUS AUTOMATIC BACKGROUND VIDEO PLAYBACK
      The clip runs seamlessly in the background on load & loops continuously
